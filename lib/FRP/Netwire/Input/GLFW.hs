@@ -1,6 +1,7 @@
 module FRP.Netwire.Input.GLFW (
+  GLFWInputControl, getInput,
   GLFWInput, GLFWInputT,
-  
+  mkInputControl, pollGLFW
 ) where
 
 --------------------------------------------------------------------------------
