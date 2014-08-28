@@ -28,6 +28,7 @@ data GLFWInputState = GLFWInputState {
   keysPressed :: Set.Set GLFW.Key,
   mbPressed :: Set.Set GLFW.MouseButton,
   cursorPos :: Maybe (Float, Float),
+  cursorMode :: CursorMode,
   scrollAmt :: (Double, Double)
 } deriving(Show)
 
@@ -60,6 +61,11 @@ instance (Functor m, Monad m) =>
       Just (x, y) -> return (x, y)
       Nothing -> return (0, 0)
 
+  setCursorMode :: CursorMode -> StateT GLFWInputState m ()
+  setCursorMode mode = do
+    ipt <- get
+    put (ipt { cursorMode = mode })
+
   scroll :: StateT GLFWInputState m (Double, Double)
   scroll = get >>= (return . scrollAmt)
 
@@ -67,6 +73,7 @@ kEmptyInput :: GLFWInputState
 kEmptyInput = GLFWInputState { keysPressed = Set.empty,
                                mbPressed = Set.empty,
                                cursorPos = Nothing,
+                               cursorMode = CursorMode'Enabled,
                                scrollAmt = (0, 0) }
 
 isKeyPressed :: GLFW.Key -> GLFWInputState -> Bool
