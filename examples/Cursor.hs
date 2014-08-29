@@ -28,15 +28,15 @@ data Shape = Shape GL.NumArrayIndices GL.BufferObject GL.BufferObject
 
 mkCircle :: IO (Shape)
 mkCircle = let
-  slices = 5
+  slices = 50
   vptrsize = toEnum $ (slices + 2) * (sizeOf (undefined :: GL.Vertex2 Float))
   iptrsize = toEnum $ (slices + 2) * (sizeOf (undefined :: Int))
   winding = [0,(2*pi/(fromIntegral slices))..] :: [Float]
   in do
     vbuf <- GL.genObjectName
     GL.bindBuffer GL.ArrayBuffer GL.$= (Just vbuf)
-    verts <- newListArray (0, slices + 1) $ 
-             (GL.Vertex2 0 0) : [GL.Vertex2 x y | x <- map cos winding, y <- map sin winding]
+    let vl = (GL.Vertex2 0 0) : (zipWith GL.Vertex2 (map cos winding) (map sin winding))
+    verts <- newListArray (0, slices + 1) vl
     withStorableArray verts
       (\ptr -> GL.bufferData GL.ArrayBuffer GL.$= (vptrsize, ptr, GL.StaticDraw))
 
@@ -163,13 +163,15 @@ run win ictl = do
 
       case result of
         Left () -> return ()
-        Right () -> runGame ipt'' sess' w'
+        Right () -> do
+          q <- GLFW.windowShouldClose win
+          unless q $ runGame ipt'' sess' w'
 
 main :: IO ()
 main = do
   -- Setup GLFW
   GLFW.init
-  (Just m) <- GLFW.createWindow 640 480 "Netwire Input Demo" Nothing Nothing
+  (Just m) <- GLFW.createWindow 400 400 "Netwire Input Demo" Nothing Nothing
   GLFW.makeContextCurrent (Just m)
 
   -- Hack for retina displays
