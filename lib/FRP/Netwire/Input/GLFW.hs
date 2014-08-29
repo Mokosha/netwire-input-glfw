@@ -165,9 +165,6 @@ cursorPosCallback (IptCtl ctl _) win x y = do
 
 mkInputControl :: GLFW.Window -> IO (GLFWInputControl)
 mkInputControl win = do
-
-  GLFW.setCursorInputMode win GLFW.CursorInputMode'Disabled
-
   ctlvar <- newTVarIO kEmptyInput
   let ctl = IptCtl ctlvar win
   GLFW.setScrollCallback win (Just $ scrollCallback ctl)
@@ -176,9 +173,10 @@ mkInputControl win = do
   GLFW.setMouseButtonCallback win (Just $ mouseButtonCallback ctl)
   return ctl
 
-pollGLFW :: GLFWInputState -> GLFWInputControl -> IO ()
+pollGLFW :: GLFWInputState -> GLFWInputControl -> IO (GLFWInputState)
 pollGLFW ipt iptctl = do
   if (cursorMode ipt) == CursorMode'Disabled
     then setInput iptctl (resetCursorPos ipt)
     else setInput iptctl ipt
   GLFW.pollEvents
+  getInput iptctl
