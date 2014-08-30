@@ -43,7 +43,7 @@ executable cursor-glfw
                        netwire >= 5,
                        netwire-input,
                        netwire-input-glfw,
-                       containers, array,
+                       bytestring, containers, array,
                        GLFW-b,
                        mtl, transformers
     hs-source-dirs:    examples

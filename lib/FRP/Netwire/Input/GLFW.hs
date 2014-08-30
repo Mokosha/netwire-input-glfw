@@ -1,5 +1,5 @@
 module FRP.Netwire.Input.GLFW (
-  GLFWInputControl, getInput,
+  GLFWInputControl, GLFWInputState, getInput,
   GLFWInput, GLFWInputT,
   mkInputControl, pollGLFW
 ) where
