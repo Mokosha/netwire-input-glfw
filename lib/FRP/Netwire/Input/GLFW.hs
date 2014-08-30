@@ -41,13 +41,16 @@ type GLFWInput = State GLFWInputState
 type GLFWInputT m = StateT GLFWInputState m
 
 instance (Functor m, Monad m) =>
-         MonadInput GLFW.Key GLFW.MouseButton (StateT GLFWInputState m) where
+         MonadKeyboard GLFW.Key (StateT GLFWInputState m) where
 
   keyIsPressed :: GLFW.Key -> StateT GLFWInputState m Bool
   keyIsPressed key = get >>= (return . isKeyPressed key)
 
   releaseKey :: GLFW.Key -> StateT GLFWInputState m ()
   releaseKey key = get >>= (put . debounceKey key)
+
+instance (Functor m, Monad m) =>
+         MonadMouse GLFW.MouseButton (StateT GLFWInputState m) where
 
   mbIsPressed :: GLFW.MouseButton -> StateT GLFWInputState m Bool
   mbIsPressed mb = get >>= (return . isButtonPressed mb)
