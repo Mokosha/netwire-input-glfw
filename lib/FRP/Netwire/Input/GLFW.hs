@@ -1,7 +1,30 @@
+{-|
+Module      : FRP.Netwire.Input.GLFW
+Description : netwire-input instances for use with GLFW
+Copyright   : (c) Pavel Krajcevski, 2014
+License     : MIT
+Maintainer  : Krajcevski@gmail.com
+Stability   : experimental
+Portability : POSIX
+
+This module contains data types with instances  needed to create wires
+that can be used with the netwire-input combinators. In particular, this
+package implements 'GLFWInputT' which has instances of 'MonadKeyboard' and
+'MonadMouse'
+
+-}
+
 module FRP.Netwire.Input.GLFW (
-  GLFWInputControl, GLFWInputState, getInput,
-  GLFWInput, GLFWInputT,
-  mkInputControl, pollGLFW
+  -- * GLFW Input
+
+  -- ** Basic Input Monad
+  GLFWInput,
+  -- ** Monad Transformer
+  GLFWInputT,
+
+  -- * State Types
+  GLFWInputControl, GLFWInputState,
+  getInput, mkInputControl, pollGLFW
 ) where
 
 --------------------------------------------------------------------------------
@@ -31,6 +54,11 @@ modeToGLFWMode CursorMode'Disabled = GLFW.CursorInputMode'Disabled
 modeToGLFWMode CursorMode'Hidden = GLFW.CursorInputMode'Hidden
 modeToGLFWMode CursorMode'Enabled = GLFW.CursorInputMode'Normal
 
+-- | The GLFW input state is a record that keeps track of which buttons and keys
+-- are currently pressed. Because GLFW works with callbacks, a call to pollEvents
+-- must be made in order to process any of the events. At this time, all of the
+-- appropriate callbacks are fired in order of the events received, and this record
+-- is updated to reflect the most recent input state.
 data GLFWInputState = GLFWInputState {
   keysPressed :: Set.Set GLFW.Key,
   mbPressed :: Set.Set GLFW.MouseButton,
@@ -43,7 +71,12 @@ instance Key GLFW.Key
 instance MouseButton GLFW.MouseButton
 
 -- !FIXME! Perhaps this is better in its own newtype
+
+-- | The 'GLFWInput' monad is simply a state monad around the GLFWInputState
 type GLFWInput = State GLFWInputState
+
+-- | The 'GLFWInputT' monad transformer is simply a state monad transformer using
+-- 'GLFWInputState'
 type GLFWInputT m = StateT GLFWInputState m
 
 instance (Functor m, Monad m) =>
@@ -100,14 +133,16 @@ withPressedButton input mb fn = if isButtonPressed mb input then fn else id
 debounceButton :: GLFW.MouseButton -> GLFWInputState -> GLFWInputState
 debounceButton mb = (\input -> input { mbPressed = Set.delete mb (mbPressed input) })
 
+-- | This is an 'STM' variable that holds the current input state. It cannot be
+-- manipulated directly, but it is updated by GLFW each time 'pollGLFW' is called.
 data GLFWInputControl = IptCtl (TVar GLFWInputState) GLFW.Window
 
--- Returns a snapshot of the input
 setCursorToWindowCenter :: GLFW.Window -> IO ()
 setCursorToWindowCenter win = do
   (w, h) <- GLFW.getWindowSize win
   GLFW.setCursorPos win (fromIntegral w / 2.0) (fromIntegral h / 2.0)
 
+-- | Returns a current snapshot of the input
 getInput :: GLFWInputControl -> IO(GLFWInputState)
 getInput (IptCtl var _) = readTVarIO var
 
@@ -163,10 +198,6 @@ mouseButtonCallback (IptCtl ctl _) _ button state _ =
       GLFW.MouseButtonState'Pressed -> update $ Set.insert button
       GLFW.MouseButtonState'Released -> update $ Set.delete button
 
--- !HACK! Right now we're simply setting the cursor position as disabled
--- regardless of application ... we should really expose this to the user
--- somehow...
-
 cursorPosCallback :: GLFWInputControl -> GLFW.Window -> Double -> Double -> IO ()
 cursorPosCallback (IptCtl ctl _) win x y = do
   (w, h) <- GLFW.getWindowSize win
@@ -174,6 +205,8 @@ cursorPosCallback (IptCtl ctl _) win x y = do
       yf = newRangeC (double2Float y) (0, fromIntegral h) (-1, 1)
   atomically $ modifyTVar' ctl (\ipt -> ipt { cursorPos = (xf, yf)})
 
+-- | Creates and returns an 'STM' variable for the window that holds all of the
+-- most recent input state information
 mkInputControl :: GLFW.Window -> IO (GLFWInputControl)
 mkInputControl win = do
   ctlvar <- newTVarIO kEmptyInput
@@ -184,6 +217,10 @@ mkInputControl win = do
   GLFW.setMouseButtonCallback win (Just $ mouseButtonCallback ctl)
   return ctl
 
+-- | Allows GLFW to interact with the windowing system to update the current
+-- state. The old state must be passed in order to properly reset certain
+-- properties such as the scroll wheel. The returned input state is identical
+-- to a subsequent call to 'getInput' right after a call to 'GLFW.pollEvents'
 pollGLFW :: GLFWInputState -> GLFWInputControl -> IO (GLFWInputState)
 pollGLFW ipt iptctl@(IptCtl _ win) = do
   -- Do we need to reset the cursor?
