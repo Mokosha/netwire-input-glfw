@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                netwire-input-glfw
-version:             0.1.0.0
+version:             0.0.1
 synopsis:            GLFW instance of netwire-input
 description:         This package contains the necessary glue to allow the use
                      of wires from the netwire-input package. In general, the types
@@ -14,11 +14,15 @@ license:             MIT
 license-file:        LICENSE
 author:              Pavel Krajcevski
 maintainer:          Krajcevski@gmail.com
--- copyright:           
+copyright:           Pavel Krajcevski, 2014
 category:            Game
 build-type:          Simple
--- extra-source-files:  
+extra-source-files:  examples/Cursor.hs README.md
 cabal-version:       >=1.10
+
+source-repository head
+  type:           git
+  location:       https://github.com/Mokosha/netwire-input-glfw
 
 library
   default-extensions:  FlexibleInstances,
