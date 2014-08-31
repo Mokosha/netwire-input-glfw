@@ -25,11 +25,17 @@ newRange x (omin, omax) (nmin, nmax) =
 newRangeC :: (Ord a, Floating a) => a -> (a, a) -> (a, a) -> a
 newRangeC x o n@(nmin, nmax) = clamp (newRange x o n) nmin nmax
 
+modeToGLFWMode :: CursorMode -> GLFW.CursorInputMode
+modeToGLFWMode CursorMode'Reset = GLFW.CursorInputMode'Disabled
+modeToGLFWMode CursorMode'Disabled = GLFW.CursorInputMode'Disabled
+modeToGLFWMode CursorMode'Hidden = GLFW.CursorInputMode'Hidden
+modeToGLFWMode CursorMode'Enabled = GLFW.CursorInputMode'Normal
+
 data GLFWInputState = GLFWInputState {
   keysPressed :: Set.Set GLFW.Key,
   mbPressed :: Set.Set GLFW.MouseButton,
-  cursorPos :: Maybe (Float, Float),
-  cursorMode :: CursorMode,
+  cursorPos :: (Float, Float),
+  cmode :: CursorMode,
   scrollAmt :: (Double, Double)
 } deriving(Show)
 
@@ -59,16 +65,12 @@ instance (Functor m, Monad m) =>
   releaseButton mb = get >>= (put . debounceButton mb)
 
   cursor :: StateT GLFWInputState m (Float, Float)
-  cursor = do
-    ipt <- get
-    case cursorPos ipt of
-      Just (x, y) -> return (x, y)
-      Nothing -> return (0, 0)
+  cursor = get >>= (return . cursorPos)
 
   setCursorMode :: CursorMode -> StateT GLFWInputState m ()
   setCursorMode mode = do
     ipt <- get
-    put (ipt { cursorMode = mode })
+    put (ipt { cmode = mode })
 
   scroll :: StateT GLFWInputState m (Double, Double)
   scroll = get >>= (return . scrollAmt)
@@ -76,8 +78,8 @@ instance (Functor m, Monad m) =>
 kEmptyInput :: GLFWInputState
 kEmptyInput = GLFWInputState { keysPressed = Set.empty,
                                mbPressed = Set.empty,
-                               cursorPos = Nothing,
-                               cursorMode = CursorMode'Enabled,
+                               cursorPos = (0, 0),
+                               cmode = CursorMode'Enabled,
                                scrollAmt = (0, 0) }
 
 isKeyPressed :: GLFW.Key -> GLFWInputState -> Bool
@@ -111,13 +113,19 @@ getInput (IptCtl var _) = readTVarIO var
 
 setInput :: GLFWInputControl -> GLFWInputState -> IO ()
 setInput (IptCtl var win) ipt = do
-  case (cursorPos ipt) of
-    Just _ -> return ()
-    Nothing -> setCursorToWindowCenter win
+
+  -- Do we need to change the cursor mode?
+  curMode <- GLFW.getCursorInputMode win
+  let newMode = modeToGLFWMode (cmode ipt)
+  if newMode == curMode
+    then return ()
+    else GLFW.setCursorInputMode win newMode
+
+  -- Write the new input
   atomically $ writeTVar var (ipt { scrollAmt = (0, 0) })
 
 resetCursorPos :: GLFWInputState -> GLFWInputState
-resetCursorPos = (\input -> input { cursorPos = Nothing })
+resetCursorPos = (\input -> input { cursorPos = (0, 0) })
 
 --------------------------
 
@@ -164,7 +172,7 @@ cursorPosCallback (IptCtl ctl _) win x y = do
   (w, h) <- GLFW.getWindowSize win
   let xf = newRangeC (double2Float x) (0, fromIntegral w) (-1, 1)
       yf = newRangeC (double2Float y) (0, fromIntegral h) (-1, 1)
-  atomically $ modifyTVar' ctl (\ipt -> ipt { cursorPos = Just (xf, yf)})
+  atomically $ modifyTVar' ctl (\ipt -> ipt { cursorPos = (xf, yf)})
 
 mkInputControl :: GLFW.Window -> IO (GLFWInputControl)
 mkInputControl win = do
@@ -177,9 +185,13 @@ mkInputControl win = do
   return ctl
 
 pollGLFW :: GLFWInputState -> GLFWInputControl -> IO (GLFWInputState)
-pollGLFW ipt iptctl = do
-  if (cursorMode ipt) == CursorMode'Disabled
-    then setInput iptctl (resetCursorPos ipt)
+pollGLFW ipt iptctl@(IptCtl _ win) = do
+  -- Do we need to reset the cursor?
+  if (cmode ipt) == CursorMode'Reset
+    then do
+    setCursorToWindowCenter win
+    setInput iptctl (resetCursorPos ipt)
     else setInput iptctl ipt
+
   GLFW.pollEvents
   getInput iptctl
