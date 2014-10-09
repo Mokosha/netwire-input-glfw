@@ -31,7 +31,7 @@ library
                        InstanceSigs
   exposed-modules:     FRP.Netwire.Input.GLFW
   -- other-modules:       
-  build-depends:       base >=4.7 && <4.8,
+  build-depends:       base >=4.6 && <4.8,
                        netwire-input,
                        containers,
                        GLFW-b,
