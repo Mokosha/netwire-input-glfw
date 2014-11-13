@@ -1,0 +1,10 @@
+language: haskell
+ghc:
+  - 7.8
+  - 7.6
+
+script:
+  - cabal configure && cabal build
+
+install:
+  - cabal install --only-dependencies
