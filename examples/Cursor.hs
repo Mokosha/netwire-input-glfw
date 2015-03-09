@@ -134,12 +134,12 @@ posWire = mouseCursor >>> (second $ arr negate) >>> (arr $ uncurry GL.Vertex2)
 -- the red and green channels of the circle pulsate
 colorWire :: (HasTime t s, Monoid e) => Wire s e GameMonad a (GL.Color3 Float)
 colorWire =
+  -- Key debounced means that it will only flash blue for one frame
+  (keyDebounced GLFW.Key'B >>> (pure $ GL.Color3 0 0 1)) <|>
+
   -- Key pressed means that it will remain this color
   (keyPressed GLFW.Key'R >>> (pure $ GL.Color3 1 0 0)) <|>
   (keyPressed GLFW.Key'G >>> (pure $ GL.Color3 0 1 0)) <|>
-
-  -- Key debounced means that it will only flash blue for one frame
-  (keyDebounced GLFW.Key'B >>> (pure $ GL.Color3 0 0 1)) <|>
 
   -- Otherwise, pulsate based on the amount of time passed
   (timeF >>> (arr (cos &&& sin)) >>> (arr $ \(x, y) -> GL.Color3 x y 1))
@@ -177,6 +177,7 @@ run win ictl = do
 
   -- run the game loop
   runGame ipt (countSession_ 0.02) (gameWire $ renderFn circle)
+
   where
 
     -- The game loop takes the current input state, the time session and
@@ -228,4 +229,4 @@ main = do
   GL.viewport GL.$= (GL.Position 0 0, GL.Size (fromIntegral szx) (fromIntegral szy))
 
   -- Run the scene
-  run m =<< (mkInputControl m)
+  mkInputControl m >>= run m
