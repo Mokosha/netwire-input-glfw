@@ -38,7 +38,7 @@ library
   build-depends:       base >=4.6 && <4.8,
                        netwire-input,
                        containers,
-                       GLFW-b,
+                       GLFW-b >= 1.4.7.2,
                        stm,
                        mtl
   hs-source-dirs:      lib
@@ -61,7 +61,7 @@ executable glfw-input-example
                     netwire-input,
                     netwire-input-glfw,
                     OpenGL,
-                    GLFW-b,
+                    GLFW-b >= 1.4.7.2,
                     transformers,
                     array,
                     bytestring,
