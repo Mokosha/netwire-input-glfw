@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                netwire-input-glfw
-version:             0.0.3
+version:             0.0.4
 synopsis:            GLFW instance of netwire-input
 description:         This package contains the necessary glue to allow the use
                      of wires from the netwire-input package. In general, the types
@@ -12,9 +12,9 @@ description:         This package contains the necessary glue to allow the use
 homepage:            https://www.github.com/Mokosha/netwire-input-glfw
 license:             MIT
 license-file:        LICENSE
-author:              Pavel Krajcevski
-maintainer:          Krajcevski@gmail.com
-copyright:           Pavel Krajcevski, 2014
+author:              Pavel Krajcevski, Bradley Hardy
+maintainer:          bradleyhardy@live.com
+copyright:           Pavel Krajcevski, 2014; Bradley Hardy, 2015
 category:            Game
 build-type:          Simple
 extra-source-files:  examples/Cursor.hs README.md
@@ -35,12 +35,13 @@ library
                        InstanceSigs
   exposed-modules:     FRP.Netwire.Input.GLFW
   -- other-modules:       
-  build-depends:       base >=4.6 && <4.8,
-                       netwire-input,
+  build-depends:       base >=4.6 && <4.9,
+                       netwire-input ==0.0.4,
                        containers,
-                       GLFW-b >= 1.4.7.2,
+                       GLFW-b,
                        stm,
-                       mtl
+                       mtl,
+                       MonadRandom
   hs-source-dirs:      lib
   default-language:    Haskell2010
 
@@ -58,10 +59,10 @@ executable glfw-input-example
   if flag(examples)
     build-depends:  base > 4.5,
                     netwire >= 5,
-                    netwire-input,
+                    netwire-input ==0.0.4,
                     netwire-input-glfw,
                     OpenGL,
-                    GLFW-b >= 1.4.7.2,
+                    GLFW-b,
                     transformers,
                     array,
                     bytestring,

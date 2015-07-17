@@ -14,13 +14,15 @@ package implements 'GLFWInputT' which has instances of 'MonadKeyboard' and
 
 -}
 
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module FRP.Netwire.Input.GLFW (
   -- * GLFW Input
 
   -- ** Basic Input Monad
-  GLFWInput,
+  GLFWInput, runGLFWInput,
   -- ** Monad Transformer
-  GLFWInputT,
+  GLFWInputT, runGLFWInputT,
 
   -- * State Types
   GLFWInputControl, GLFWInputState,
@@ -33,14 +35,21 @@ import qualified Data.Set as Set
 import qualified Graphics.UI.GLFW as GLFW
 import Control.Applicative
 import Control.Concurrent.STM
+import Control.Monad.RWS
 import Control.Monad.State
+import Control.Monad.Except
+import Control.Monad.Cont
+import Control.Monad.Random
 import GHC.Float hiding (clamp)
 
 import FRP.Netwire.Input
 --------------------------------------------------------------------------------
 
 clamp :: Ord a => a -> a -> a -> a
-clamp x a b = if x < a then a else if x > b then b else x
+clamp x a b
+  | x < a = a
+  | x > b = b
+  | otherwise = x
 
 newRange :: Floating a => a -> (a, a) -> (a, a) -> a
 newRange x (omin, omax) (nmin, nmax) =
@@ -73,43 +82,91 @@ data GLFWInputState = GLFWInputState {
 instance Key GLFW.Key
 instance MouseButton GLFW.MouseButton
 
--- !FIXME! Perhaps this is better in its own newtype
-
 -- | The 'GLFWInput' monad is simply a state monad around the GLFWInputState
-type GLFWInput = State GLFWInputState
+newtype GLFWInput a = GLFWInput (State GLFWInputState a)
+                    deriving (Functor, Applicative, Monad, MonadFix)
+
+runGLFWInput :: GLFWInput a -> GLFWInputState -> (a, GLFWInputState)
+runGLFWInput (GLFWInput m) = runState m
+
+instance MonadKeyboard GLFW.Key GLFWInput where
+
+  keyIsPressed :: GLFW.Key -> GLFWInput Bool
+  -- keyIsPressed key = get >>= (return . glfwKeyPressed key)
+  keyIsPressed key = GLFWInput (glfwKeyPressed key <$> get)
+
+  releaseKey :: GLFW.Key -> GLFWInput ()
+  releaseKey key = GLFWInput (get >>= (put . debounceKey key))
+
+instance MonadMouse GLFW.MouseButton GLFWInput where
+
+  mbIsPressed :: GLFW.MouseButton -> GLFWInput Bool
+  mbIsPressed mb = GLFWInput (isButtonPressed mb <$> get)
+
+  releaseButton :: GLFW.MouseButton -> GLFWInput ()
+  releaseButton mb = GLFWInput (get >>= (put . debounceButton mb))
+
+  cursor :: GLFWInput (Float, Float)
+  cursor = GLFWInput (cursorPos <$> get)
+
+  setCursorMode :: CursorMode -> GLFWInput ()
+  setCursorMode mode = do
+    ipt <- GLFWInput get
+    GLFWInput $ put (ipt { cmode = mode })
+
+  scroll :: GLFWInput (Double, Double)
+  scroll = GLFWInput (scrollAmt <$> get)
 
 -- | The 'GLFWInputT' monad transformer is simply a state monad transformer using
 -- 'GLFWInputState'
-type GLFWInputT m = StateT GLFWInputState m
+newtype GLFWInputT m a =
+  GLFWInputT (StateT GLFWInputState m a)
+  deriving ( Functor
+           , Applicative
+           , Alternative
+           , Monad
+           , MonadFix
+           , MonadIO
+           , MonadWriter w
+           , MonadReader r
+           , MonadError e
+           , MonadPlus
+           , MonadCont
+           , MonadTrans
+           , MonadRandom )
+
+runGLFWInputT :: GLFWInputT m a -> GLFWInputState -> m (a, GLFWInputState)
+runGLFWInputT (GLFWInputT m) = runStateT m
 
 instance (Functor m, Monad m) =>
-         MonadKeyboard GLFW.Key (StateT GLFWInputState m) where
+         MonadKeyboard GLFW.Key (GLFWInputT m) where
 
-  keyIsPressed :: GLFW.Key -> StateT GLFWInputState m Bool
-  keyIsPressed key = get >>= (return . isKeyPressed key)
+  keyIsPressed :: GLFW.Key -> GLFWInputT m Bool
+  -- keyIsPressed key = get >>= (return . glfwKeyPressed key)
+  keyIsPressed key = GLFWInputT (glfwKeyPressed key <$> get)
 
-  releaseKey :: GLFW.Key -> StateT GLFWInputState m ()
-  releaseKey key = get >>= (put . debounceKey key)
+  releaseKey :: GLFW.Key -> GLFWInputT m ()
+  releaseKey key = GLFWInputT (get >>= (put . debounceKey key))
 
 instance (Functor m, Monad m) =>
-         MonadMouse GLFW.MouseButton (StateT GLFWInputState m) where
+         MonadMouse GLFW.MouseButton (GLFWInputT m) where
 
-  mbIsPressed :: GLFW.MouseButton -> StateT GLFWInputState m Bool
-  mbIsPressed mb = get >>= (return . isButtonPressed mb)
+  mbIsPressed :: GLFW.MouseButton -> GLFWInputT m Bool
+  mbIsPressed mb = GLFWInputT (isButtonPressed mb <$> get)
 
-  releaseButton :: GLFW.MouseButton -> StateT GLFWInputState m ()
-  releaseButton mb = get >>= (put . debounceButton mb)
+  releaseButton :: GLFW.MouseButton -> GLFWInputT m ()
+  releaseButton mb = GLFWInputT (get >>= (put . debounceButton mb))
 
-  cursor :: StateT GLFWInputState m (Float, Float)
-  cursor = get >>= (return . cursorPos)
+  cursor :: GLFWInputT m (Float, Float)
+  cursor = GLFWInputT (cursorPos <$> get)
 
-  setCursorMode :: CursorMode -> StateT GLFWInputState m ()
+  setCursorMode :: CursorMode -> GLFWInputT m ()
   setCursorMode mode = do
-    ipt <- get
-    put (ipt { cmode = mode })
+    ipt <- GLFWInputT get
+    GLFWInputT $ put (ipt { cmode = mode })
 
-  scroll :: StateT GLFWInputState m (Double, Double)
-  scroll = get >>= (return . scrollAmt)
+  scroll :: GLFWInputT m (Double, Double)
+  scroll = GLFWInputT (scrollAmt <$> get)
 
 kEmptyInput :: GLFWInputState
 kEmptyInput = GLFWInputState { keysPressed = Map.empty,
@@ -120,17 +177,17 @@ kEmptyInput = GLFWInputState { keysPressed = Map.empty,
                                cmode = CursorMode'Enabled,
                                scrollAmt = (0, 0) }
 
-isKeyPressed :: GLFW.Key -> GLFWInputState -> Bool
-isKeyPressed key = (Map.member key) . keysPressed
+glfwKeyPressed :: GLFW.Key -> GLFWInputState -> Bool
+glfwKeyPressed key = Map.member key . keysPressed
 
 withPressedKey :: GLFWInputState -> GLFW.Key -> (a -> a) -> a -> a
-withPressedKey input key fn = if isKeyPressed key input then fn else id
+withPressedKey input key fn = if glfwKeyPressed key input then fn else id
 
 debounceKey :: GLFW.Key -> GLFWInputState -> GLFWInputState
 debounceKey key input = input { keysPressed = Map.delete key (keysPressed input) }
 
 isButtonPressed :: GLFW.MouseButton -> GLFWInputState -> Bool
-isButtonPressed mb = (Map.member mb) . mbPressed
+isButtonPressed mb = Map.member mb . mbPressed
 
 withPressedButton :: GLFWInputState -> GLFW.MouseButton -> (a -> a) -> a -> a
 withPressedButton input mb fn = if isButtonPressed mb input then fn else id
@@ -148,7 +205,7 @@ setCursorToWindowCenter win = do
   GLFW.setCursorPos win (fromIntegral w / 2.0) (fromIntegral h / 2.0)
 
 -- | Returns a current snapshot of the input
-getInput :: GLFWInputControl -> IO (GLFWInputState)
+getInput :: GLFWInputControl -> IO GLFWInputState
 getInput (IptCtl var _) = readTVarIO var
 
 setInput :: GLFWInputControl -> GLFWInputState -> IO ()
@@ -157,9 +214,8 @@ setInput (IptCtl var win) ipt = do
   -- Do we need to change the cursor mode?
   curMode <- GLFW.getCursorInputMode win
   let newMode = modeToGLFWMode (cmode ipt)
-  if newMode == curMode
-    then return ()
-    else GLFW.setCursorInputMode win newMode
+  unless (newMode == curMode) $
+    GLFW.setCursorInputMode win newMode
 
   -- Write the new input
   atomically $ writeTVar var (ipt { scrollAmt = (0, 0) })
@@ -196,7 +252,7 @@ keyCallback (IptCtl ctl _) _ key _ keystate _ = atomically $ modifyTVar' ctl mod
       GLFW.KeyState'Released -> input {
         keysPressed = Map.update removeReleased key (keysPressed input),
         keysReleased =
-          case (Map.lookup key (keysPressed input)) of
+          case Map.lookup key (keysPressed input) of
             -- If the key was just added... queue it up
             Just 0 -> Set.insert key (keysReleased input)
             -- If the key isn't pressed then it must have been debounced... do nothing
@@ -240,7 +296,7 @@ cursorPosCallback (IptCtl ctl _) win x y = do
 
 -- | Creates and returns an 'STM' variable for the window that holds all of the
 -- most recent input state information
-mkInputControl :: GLFW.Window -> IO (GLFWInputControl)
+mkInputControl :: GLFW.Window -> IO GLFWInputControl
 mkInputControl win = do
   ctlvar <- newTVarIO kEmptyInput
   let ctl = IptCtl ctlvar win
@@ -254,12 +310,12 @@ mkInputControl win = do
 -- state. The old state must be passed in order to properly reset certain
 -- properties such as the scroll wheel. The returned input state is identical
 -- to a subsequent call to 'getInput' right after a call to 'GLFW.pollEvents'
-pollGLFW :: GLFWInputState -> GLFWInputControl -> IO (GLFWInputState)
+pollGLFW :: GLFWInputState -> GLFWInputControl -> IO GLFWInputState
 pollGLFW ipt iptctl@(IptCtl _ win) = do
   let ipt' = resolveReleased ipt
 
   -- Do we need to reset the cursor?
-  if (cmode ipt') == CursorMode'Reset
+  if cmode ipt' == CursorMode'Reset
     then do
     setCursorToWindowCenter win
     setInput iptctl (resetCursorPos ipt')
