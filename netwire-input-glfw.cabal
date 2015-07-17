@@ -22,7 +22,7 @@ cabal-version:       >=1.10
 
 flag                 examples
   description:       Build examples
-  default:           False
+  default:           True
 
 source-repository head
   type:           git
@@ -36,7 +36,7 @@ library
   exposed-modules:     FRP.Netwire.Input.GLFW
   -- other-modules:       
   build-depends:       base >=4.6 && <4.9,
-                       netwire-input ==0.0.4,
+                       netwire-input,
                        containers,
                        GLFW-b,
                        stm,
@@ -59,8 +59,8 @@ executable glfw-input-example
   if flag(examples)
     build-depends:  base > 4.5,
                     netwire >= 5,
-                    netwire-input ==0.0.4,
-                    netwire-input-glfw,
+                    netwire-input,
+                    netwire-input-glfw ==0.0.4,
                     OpenGL,
                     GLFW-b,
                     transformers,
