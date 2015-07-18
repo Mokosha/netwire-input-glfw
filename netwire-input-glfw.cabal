@@ -12,9 +12,9 @@ description:         This package contains the necessary glue to allow the use
 homepage:            https://www.github.com/Mokosha/netwire-input-glfw
 license:             MIT
 license-file:        LICENSE
-author:              Pavel Krajcevski, Bradley Hardy
-maintainer:          bradleyhardy@live.com
-copyright:           Pavel Krajcevski, 2014; Bradley Hardy, 2015
+author:              Pavel Krajcevski
+maintainer:          krajcevski@gmail.com
+copyright:           Pavel Krajcevski, 2014
 category:            Game
 build-type:          Simple
 extra-source-files:  examples/Cursor.hs README.md
