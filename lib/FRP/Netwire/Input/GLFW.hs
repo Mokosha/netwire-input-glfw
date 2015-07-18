@@ -39,7 +39,7 @@ import Control.Monad.RWS
 import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad.Cont
-import Control.Monad.Random
+import Control.Monad.Identity
 import GHC.Float hiding (clamp)
 
 import FRP.Netwire.Input
@@ -82,41 +82,6 @@ data GLFWInputState = GLFWInputState {
 instance Key GLFW.Key
 instance MouseButton GLFW.MouseButton
 
--- | The 'GLFWInput' monad is simply a state monad around the GLFWInputState
-newtype GLFWInput a = GLFWInput (State GLFWInputState a)
-                    deriving (Functor, Applicative, Monad, MonadFix)
-
-runGLFWInput :: GLFWInput a -> GLFWInputState -> (a, GLFWInputState)
-runGLFWInput (GLFWInput m) = runState m
-
-instance MonadKeyboard GLFW.Key GLFWInput where
-
-  keyIsPressed :: GLFW.Key -> GLFWInput Bool
-  -- keyIsPressed key = get >>= (return . glfwKeyPressed key)
-  keyIsPressed key = GLFWInput (glfwKeyPressed key <$> get)
-
-  releaseKey :: GLFW.Key -> GLFWInput ()
-  releaseKey key = GLFWInput (get >>= (put . debounceKey key))
-
-instance MonadMouse GLFW.MouseButton GLFWInput where
-
-  mbIsPressed :: GLFW.MouseButton -> GLFWInput Bool
-  mbIsPressed mb = GLFWInput (isButtonPressed mb <$> get)
-
-  releaseButton :: GLFW.MouseButton -> GLFWInput ()
-  releaseButton mb = GLFWInput (get >>= (put . debounceButton mb))
-
-  cursor :: GLFWInput (Float, Float)
-  cursor = GLFWInput (cursorPos <$> get)
-
-  setCursorMode :: CursorMode -> GLFWInput ()
-  setCursorMode mode = do
-    ipt <- GLFWInput get
-    GLFWInput $ put (ipt { cmode = mode })
-
-  scroll :: GLFWInput (Double, Double)
-  scroll = GLFWInput (scrollAmt <$> get)
-
 -- | The 'GLFWInputT' monad transformer is simply a state monad transformer using
 -- 'GLFWInputState'
 newtype GLFWInputT m a =
@@ -133,10 +98,17 @@ newtype GLFWInputT m a =
            , MonadPlus
            , MonadCont
            , MonadTrans
-           , MonadRandom )
+           )
 
 runGLFWInputT :: GLFWInputT m a -> GLFWInputState -> m (a, GLFWInputState)
 runGLFWInputT (GLFWInputT m) = runStateT m
+
+-- | The 'GLFWInput' monad is simply the GLFWInputT transformer around the
+-- identity monad.
+type GLFWInput = GLFWInputT Identity
+
+runGLFWInput :: GLFWInput a -> GLFWInputState -> (a, GLFWInputState)
+runGLFWInput m is = runIdentity (runGLFWInputT m is)
 
 instance (Functor m, Monad m) =>
          MonadKeyboard GLFW.Key (GLFWInputT m) where
