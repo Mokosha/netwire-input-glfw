@@ -110,26 +110,24 @@ type GLFWInput = GLFWInputT Identity
 runGLFWInput :: GLFWInput a -> GLFWInputState -> (a, GLFWInputState)
 runGLFWInput m is = runIdentity (runGLFWInputT m is)
 
-instance (Functor m, Monad m) =>
-         MonadKeyboard GLFW.Key (GLFWInputT m) where
+instance Monad m => MonadKeyboard GLFW.Key (GLFWInputT m) where
 
   keyIsPressed :: GLFW.Key -> GLFWInputT m Bool
-  keyIsPressed key = GLFWInputT (isKeyDown key <$> get)
+  keyIsPressed key = GLFWInputT . liftM (isKeyDown key) $ get
 
   releaseKey :: GLFW.Key -> GLFWInputT m ()
   releaseKey key = GLFWInputT (get >>= (put . debounceKey key))
 
-instance (Functor m, Monad m) =>
-         MonadMouse GLFW.MouseButton (GLFWInputT m) where
+instance Monad m => MonadMouse GLFW.MouseButton (GLFWInputT m) where
 
   mbIsPressed :: GLFW.MouseButton -> GLFWInputT m Bool
-  mbIsPressed mb = GLFWInputT (isButtonPressed mb <$> get)
+  mbIsPressed mb = GLFWInputT . liftM (isButtonPressed mb) $ get
 
   releaseButton :: GLFW.MouseButton -> GLFWInputT m ()
   releaseButton mb = GLFWInputT (get >>= (put . debounceButton mb))
 
   cursor :: GLFWInputT m (Float, Float)
-  cursor = GLFWInputT (cursorPos <$> get)
+  cursor = GLFWInputT . liftM cursorPos $ get
 
   setCursorMode :: CursorMode -> GLFWInputT m ()
   setCursorMode mode = do
@@ -137,7 +135,7 @@ instance (Functor m, Monad m) =>
     GLFWInputT $ put (ipt { cmode = mode })
 
   scroll :: GLFWInputT m (Double, Double)
-  scroll = GLFWInputT (scrollAmt <$> get)
+  scroll = GLFWInputT . liftM scrollAmt $ get
 
 kEmptyInput :: GLFWInputState
 kEmptyInput = GLFWInputState { keysPressed = Map.empty,
