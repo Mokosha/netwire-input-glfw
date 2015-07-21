@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                netwire-input-glfw
-version:             0.0.4
+version:             0.0.5
 synopsis:            GLFW instance of netwire-input
 description:         This package contains the necessary glue to allow the use
                      of wires from the netwire-input package. In general, the types
@@ -35,10 +35,10 @@ library
                        InstanceSigs
   exposed-modules:     FRP.Netwire.Input.GLFW
   -- other-modules:       
-  build-depends:       base >= 4.6 && < 4.10,
+  build-depends:       base >=4.6 && <4.9,
                        netwire-input,
                        containers,
-                       GLFW-b >= 1.4.7.2,
+                       GLFW-b,
                        stm,
                        mtl
   hs-source-dirs:      lib
@@ -59,9 +59,9 @@ executable glfw-input-example
     build-depends:  base > 4.5,
                     netwire >= 5,
                     netwire-input,
-                    netwire-input-glfw,
+                    netwire-input-glfw ==0.0.4,
                     OpenGL,
-                    GLFW-b >= 1.4.7.2,
+                    GLFW-b,
                     transformers,
                     array,
                     bytestring,

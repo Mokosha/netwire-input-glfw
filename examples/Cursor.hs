@@ -200,7 +200,7 @@ run win ictl = do
       -- state (for example if the wire debounced any keys). This is what we pass
       -- back to GLFW.
       --  renderPrg :: IO ((Either e (), Wire s e GameMonad a ()), GLFWInputState)
-      let renderPrg = runStateT (stepWire w timeState (Right undefined)) ipt'
+      let renderPrg = runGLFWInputT (stepWire w timeState (Right undefined)) ipt'
 
       -- Now run the actual IO program to extract the values from it.
       ((result, w'), ipt'') <- renderPrg
