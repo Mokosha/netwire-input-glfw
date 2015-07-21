@@ -13,8 +13,8 @@ homepage:            https://www.github.com/Mokosha/netwire-input-glfw
 license:             MIT
 license-file:        LICENSE
 author:              Pavel Krajcevski
-maintainer:          krajcevski@gmail.com
-copyright:           Pavel Krajcevski, 2014
+maintainer:          Krajcevski@gmail.com
+copyright:           Pavel Krajcevski, 2015
 category:            Game
 build-type:          Simple
 extra-source-files:  examples/Cursor.hs README.md

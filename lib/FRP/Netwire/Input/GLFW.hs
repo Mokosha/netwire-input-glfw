@@ -114,8 +114,7 @@ instance (Functor m, Monad m) =>
          MonadKeyboard GLFW.Key (GLFWInputT m) where
 
   keyIsPressed :: GLFW.Key -> GLFWInputT m Bool
-  -- keyIsPressed key = get >>= (return . glfwKeyPressed key)
-  keyIsPressed key = GLFWInputT (glfwKeyPressed key <$> get)
+  keyIsPressed key = GLFWInputT (isKeyDown key <$> get)
 
   releaseKey :: GLFW.Key -> GLFWInputT m ()
   releaseKey key = GLFWInputT (get >>= (put . debounceKey key))
@@ -149,11 +148,13 @@ kEmptyInput = GLFWInputState { keysPressed = Map.empty,
                                cmode = CursorMode'Enabled,
                                scrollAmt = (0, 0) }
 
-glfwKeyPressed :: GLFW.Key -> GLFWInputState -> Bool
-glfwKeyPressed key = Map.member key . keysPressed
+isKeyDown :: GLFW.Key -> GLFWInputState -> Bool
+isKeyDown key = (Map.member key) . keysPressed
 
 withPressedKey :: GLFWInputState -> GLFW.Key -> (a -> a) -> a -> a
-withPressedKey input key fn = if glfwKeyPressed key input then fn else id
+withPressedKey input key fn
+  | isKeyDown key input = fn
+  | otherwise = id
 
 debounceKey :: GLFW.Key -> GLFWInputState -> GLFWInputState
 debounceKey key input = input { keysPressed = Map.delete key (keysPressed input) }
