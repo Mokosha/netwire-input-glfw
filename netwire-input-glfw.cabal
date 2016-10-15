@@ -38,9 +38,9 @@ library
   build-depends:       base >=4.6 && <4.9,
                        netwire-input,
                        containers,
-                       GLFW-b,
+                       GLFW-b < 1.4.8,
                        stm,
-                       mtl
+                       mtl >= 2.2.1
   hs-source-dirs:      lib
   default-language:    Haskell2010
 
@@ -59,15 +59,16 @@ executable glfw-input-example
     build-depends:  base > 4.5,
                     netwire >= 5,
                     netwire-input,
-                    netwire-input-glfw ==0.0.4,
+                    netwire-input-glfw ==0.0.5,
                     OpenGL,
-                    GLFW-b,
+                    GLFW-b < 1.4.8,
                     transformers,
                     array,
                     bytestring,
-                    mtl,
+                    mtl >= 2.2.1,
                     containers,
                     directory,
                     filepath
+    default-language:  Haskell2010
   else
     buildable:      False
