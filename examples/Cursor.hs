@@ -176,7 +176,7 @@ run win ictl = do
   renderFn <- mkRenderFunc
 
   -- run the game loop
-  runGame ipt (countSession_ 0.02) (gameWire $ renderFn circle)
+  runGame ipt (countSession_ (0.02 :: Double)) (gameWire $ renderFn circle)
 
   where
 
