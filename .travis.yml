@@ -63,7 +63,6 @@ matrix:
   - env: BUILD=cabal GHCVER=7.6.3 CABALVER=1.16
   - env: BUILD=cabal GHCVER=7.8.4 CABALVER=1.18
   - env: BUILD=cabal GHCVER=head  CABALVER=head
-  - env: BUILD=stack ARGS="--resolver nightly"
 
 before_install:
 # Using compiler above sets CC to an invalid value, so unset it

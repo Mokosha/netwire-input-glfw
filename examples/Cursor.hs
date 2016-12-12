@@ -2,7 +2,6 @@ module Main where
 
 --------------------------------------------------------------------------------
 import Control.Monad.State
-import Control.Monad.Trans.Class
 import Control.Wire hiding (unless)
 
 import Data.Array.IO
@@ -126,7 +125,7 @@ type GameSession = Session IO (Timed Float ())
 -- but negates the y-value. The origin of the mouse coordinates are in the top left
 -- corner of the screen with the y-axis pointing down while the y-axis for rendering
 -- points up.
-posWire :: Monoid e => Wire s e GameMonad a (GL.Vertex2 Float)
+posWire :: Wire s e GameMonad a (GL.Vertex2 Float)
 posWire = mouseCursor >>> (second $ arr negate) >>> (arr $ uncurry GL.Vertex2)
 
 -- This wire produces color for the circle. If the R, G, or B keys are pressed,
@@ -148,7 +147,7 @@ colorWire =
 -- passed in renderFn. In reality, this wire doesn't need to be a wire, and could just
 -- be a monad to render, but this way we can render what we need without having to
 -- go through the plumbing of our main game loop
-renderWire :: Monoid e => RenderFn -> Wire s e GameMonad (GL.Vertex2 Float, GL.Color3 Float) ()
+renderWire :: RenderFn -> Wire s e GameMonad (GL.Vertex2 Float, GL.Color3 Float) ()
 renderWire rfn = mkGen_ $ \(pos, color) -> lift $ rfn pos color >> (return $ Right ())
 
 -- Wire that behaves like the identity wire until Q is pressed, then inhibits forever.
