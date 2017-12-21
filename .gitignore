@@ -7,6 +7,8 @@ cabal-dev
 *.chs.h
 .virthualenv
 *cabal.sandbox.config
+stack.yaml
+.stack-work/**
 
 # Emacs things
 *~
