@@ -1,7 +1,7 @@
 {-|
 Module      : FRP.Netwire.Input.GLFW
 Description : netwire-input instances for use with GLFW
-Copyright   : (c) Pavel Krajcevski, 2014
+Copyright   : (c) Pavel Krajcevski, 2017
 License     : MIT
 Maintainer  : Krajcevski@gmail.com
 Stability   : experimental
@@ -15,6 +15,7 @@ package implements 'GLFWInputT' which has instances of 'MonadKeyboard' and
 -}
 
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module FRP.Netwire.Input.GLFW (
   -- * GLFW Input
@@ -100,6 +101,14 @@ newtype GLFWInputT m a =
            , MonadTrans
            )
 
+instance MonadState s m => MonadState s (GLFWInputT m) where
+  get = lift get
+  put = lift . put
+  state = lift . state
+
+-- | To execute a computation with the current input snapshot, we need to give
+-- supply the current 'GLFWInputState'. This comes from the 'GLFWInputControl'
+-- associated with the given window.
 runGLFWInputT :: GLFWInputT m a -> GLFWInputState -> m (a, GLFWInputState)
 runGLFWInputT (GLFWInputT m) = runStateT m
 
@@ -108,7 +117,7 @@ runGLFWInputT (GLFWInputT m) = runStateT m
 type GLFWInput = GLFWInputT Identity
 
 runGLFWInput :: GLFWInput a -> GLFWInputState -> (a, GLFWInputState)
-runGLFWInput m is = runIdentity (runGLFWInputT m is)
+runGLFWInput m = runIdentity . runGLFWInputT m
 
 instance Monad m => MonadKeyboard GLFW.Key (GLFWInputT m) where
 
