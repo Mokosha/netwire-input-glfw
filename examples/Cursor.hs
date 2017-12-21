@@ -219,7 +219,7 @@ run win ictl = do
 main :: IO ()
 main = do
   -- Setup GLFW
-  GLFW.init
+  _ <- GLFW.init
   (Just m) <- GLFW.createWindow 400 400 "Netwire Input Demo" Nothing Nothing
   GLFW.makeContextCurrent (Just m)
 
