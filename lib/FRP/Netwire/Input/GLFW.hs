@@ -110,8 +110,16 @@ instance MonadState s m => MonadState s (GLFWInputT m) where
   put = lift . put
   state = lift . state
 
+-- | Describes a monad that provides stateful access to a 'GLFWInputState'. By
+-- being able to modify the state, the context that satisfies this typeclass
+-- can decide to debounce or "take ownership" of the button presses at a
+-- specific point of the computation. This should be done via the 'MonadKey' and
+-- 'MonadMouse' instances.
 class Monad m => MonadGLFWInput m where
+  -- | Retrieves the current input state
   getGLFWInput :: m GLFWInputState
+  -- | Places a modified input state back into the context. This should probably
+  -- not be called directly.
   putGLFWInput :: GLFWInputState -> m ()
 
 instance Monad m => MonadGLFWInput (GLFWInputT m) where
@@ -127,10 +135,12 @@ instance Monad m => MonadGLFWInput (GLFWInputT m) where
 runGLFWInputT :: GLFWInputT m a -> GLFWInputState -> m (a, GLFWInputState)
 runGLFWInputT (GLFWInputT m) = runStateT m
 
--- | The 'GLFWInput' monad is simply the GLFWInputT transformer around the
+-- | The 'GLFWInput' monad is simply the 'GLFWInputT' transformer around the
 -- identity monad.
 type GLFWInput = GLFWInputT Identity
 
+-- | Runs the 'GLFWInput' computation with a current input snapshot and returns
+-- the potentially modified input.
 runGLFWInput :: GLFWInput a -> GLFWInputState -> (a, GLFWInputState)
 runGLFWInput m = runIdentity . runGLFWInputT m
 
