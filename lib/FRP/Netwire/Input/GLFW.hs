@@ -106,6 +106,17 @@ instance MonadState s m => MonadState s (GLFWInputT m) where
   put = lift . put
   state = lift . state
 
+class Monad m => MonadGLFWInput m where
+  getGLFWInput :: m GLFWInputState
+  putGLFWInput :: GLFWInputState -> m ()
+
+instance Monad m => MonadGLFWInput (GLFWInputT m) where
+  getGLFWInput :: GLFWInputT m GLFWInputState
+  getGLFWInput = GLFWInputT get
+
+  putGLFWInput :: GLFWInputState -> GLFWInputT m ()
+  putGLFWInput = GLFWInputT . put
+
 -- | To execute a computation with the current input snapshot, we need to give
 -- supply the current 'GLFWInputState'. This comes from the 'GLFWInputControl'
 -- associated with the given window.
@@ -119,32 +130,30 @@ type GLFWInput = GLFWInputT Identity
 runGLFWInput :: GLFWInput a -> GLFWInputState -> (a, GLFWInputState)
 runGLFWInput m = runIdentity . runGLFWInputT m
 
-instance Monad m => MonadKeyboard GLFW.Key (GLFWInputT m) where
+instance MonadGLFWInput m => MonadKeyboard GLFW.Key m where
+  keyIsPressed :: GLFW.Key -> m Bool
+  keyIsPressed key = liftM (isKeyDown key) getGLFWInput
 
-  keyIsPressed :: GLFW.Key -> GLFWInputT m Bool
-  keyIsPressed key = GLFWInputT . liftM (isKeyDown key) $ get
+  releaseKey :: GLFW.Key -> m ()
+  releaseKey key = getGLFWInput >>= (putGLFWInput . debounceKey key)
 
-  releaseKey :: GLFW.Key -> GLFWInputT m ()
-  releaseKey key = GLFWInputT (get >>= (put . debounceKey key))
+instance MonadGLFWInput m => MonadMouse GLFW.MouseButton m where
+  mbIsPressed :: GLFW.MouseButton -> m Bool
+  mbIsPressed mb = liftM (isButtonPressed mb) getGLFWInput
 
-instance Monad m => MonadMouse GLFW.MouseButton (GLFWInputT m) where
+  releaseButton :: GLFW.MouseButton -> m ()
+  releaseButton mb = getGLFWInput >>= (putGLFWInput . debounceButton mb)
 
-  mbIsPressed :: GLFW.MouseButton -> GLFWInputT m Bool
-  mbIsPressed mb = GLFWInputT . liftM (isButtonPressed mb) $ get
+  cursor :: m (Float, Float)
+  cursor = liftM cursorPos getGLFWInput
 
-  releaseButton :: GLFW.MouseButton -> GLFWInputT m ()
-  releaseButton mb = GLFWInputT (get >>= (put . debounceButton mb))
-
-  cursor :: GLFWInputT m (Float, Float)
-  cursor = GLFWInputT . liftM cursorPos $ get
-
-  setCursorMode :: CursorMode -> GLFWInputT m ()
+  setCursorMode :: CursorMode -> m ()
   setCursorMode mode = do
-    ipt <- GLFWInputT get
-    GLFWInputT $ put (ipt { cmode = mode })
+    ipt <- getGLFWInput
+    putGLFWInput (ipt { cmode = mode })
 
-  scroll :: GLFWInputT m (Double, Double)
-  scroll = GLFWInputT . liftM scrollAmt $ get
+  scroll :: m (Double, Double)
+  scroll = liftM scrollAmt getGLFWInput
 
 kEmptyInput :: GLFWInputState
 kEmptyInput = GLFWInputState { keysPressed = Map.empty,
@@ -216,14 +225,16 @@ resolveReleased input = input {
 --------------------------
 
 scrollCallback :: GLFWInputControl -> GLFW.Window -> Double -> Double -> IO ()
-scrollCallback (IptCtl ctl _) _ xoff yoff = atomically $ modifyTVar' ctl updateScroll
+scrollCallback (IptCtl ctl _) _ xoff yoff =
+  atomically $ modifyTVar' ctl updateScroll
   where
     updateScroll :: GLFWInputState -> GLFWInputState
     updateScroll = (\input -> input { scrollAmt = (xoff, yoff) })
 
 keyCallback :: GLFWInputControl -> GLFW.Window ->
                GLFW.Key -> Int -> GLFW.KeyState -> GLFW.ModifierKeys -> IO ()
-keyCallback (IptCtl ctl _) _ key _ keystate _ = atomically $ modifyTVar' ctl modifyKeys
+keyCallback (IptCtl ctl _) _ key _ keystate _ =
+  atomically $ modifyTVar' ctl modifyKeys
   where
     modifyKeys :: GLFWInputState -> GLFWInputState
     modifyKeys input = case keystate of
