@@ -22,8 +22,12 @@ module FRP.Netwire.Input.GLFW (
 
   -- ** Basic Input Monad
   GLFWInput, runGLFWInput,
+
   -- ** Monad Transformer
   GLFWInputT, runGLFWInputT,
+
+  -- * Typeclass
+  MonadGLFWInput(..),
 
   -- * State Types
   GLFWInputControl, GLFWInputState,
