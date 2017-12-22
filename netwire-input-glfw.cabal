@@ -2,13 +2,13 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                netwire-input-glfw
-version:             0.0.7
+version:             0.0.8
 synopsis:            GLFW instance of netwire-input
 description:         This package contains the necessary glue to allow the use
-                     of wires from the netwire-input package. In general, the types
-                     associated here should be used only sparingly to plumb the input
-                     state through your netwire program. Otherwise, the state should
-                     not be modified directly.
+                     of wires from the netwire-input package. In general, the
+                     types associated here should be used only sparingly to
+                     plumb the input state through your netwire program.
+                     Otherwise, the state should not be modified directly.
 homepage:            https://www.github.com/Mokosha/netwire-input-glfw
 license:             MIT
 license-file:        LICENSE
