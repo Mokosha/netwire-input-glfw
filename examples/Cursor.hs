@@ -143,15 +143,16 @@ colorWire =
   -- Otherwise, pulsate based on the amount of time passed
   (timeF >>> (arr (cos &&& sin)) >>> (arr $ \(x, y) -> GL.Color3 x y 1))
 
--- This wire simply takes a vertex position and color and renders according to the
--- passed in renderFn. In reality, this wire doesn't need to be a wire, and could just
--- be a monad to render, but this way we can render what we need without having to
--- go through the plumbing of our main game loop
+-- This wire takes a vertex position and color and renders according to the
+-- passed in renderFn. In reality, this wire doesn't need to be a wire, and
+-- could be a monad to render, but this way we can render what we need without
+-- having to go through the plumbing of our main game loop
 renderWire :: RenderFn -> Wire s e GameMonad (GL.Vertex2 Float, GL.Color3 Float) ()
 renderWire rfn = mkGen_ $ \(pos, color) -> lift $ rfn pos color >> (return $ Right ())
 
--- Wire that behaves like the identity wire until Q is pressed, then inhibits forever.
--- We can compose our main gameWire with this wire to simply quit the program when q is pressed
+-- Wire that behaves like the identity wire until Q is pressed, then inhibits
+-- forever. We can compose our main gameWire with this wire to quit the program
+-- when q is pressed
 quitWire :: Monoid e => Wire s e GameMonad a a
 quitWire = (mkId &&& eventWire) >>> (rSwitch mkId)
   where
