@@ -29,12 +29,7 @@ source-repository head
   location:       https://github.com/Mokosha/netwire-input-glfw
 
 library
-  default-extensions:  FlexibleInstances,
-                       TypeSynonymInstances,
-                       MultiParamTypeClasses,
-                       InstanceSigs
   exposed-modules:     FRP.Netwire.Input.GLFW
-  -- other-modules:       
   build-depends:       base >= 4.6 && < 6,
                        netwire-input,
                        containers,

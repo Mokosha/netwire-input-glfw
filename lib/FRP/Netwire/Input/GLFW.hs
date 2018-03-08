@@ -13,10 +13,12 @@ package implements 'GLFWInputT' which has instances of 'MonadKeyboard' and
 'MonadMouse'
 
 -}
-
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
-
 module FRP.Netwire.Input.GLFW (
   -- * GLFW Input
 
