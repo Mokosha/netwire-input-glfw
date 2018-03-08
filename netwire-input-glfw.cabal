@@ -48,7 +48,7 @@ library
 executable glfw-input-example
   main-is:          Cursor.hs
   hs-source-dirs:   examples
-  ghc-options:      -Wall -O3
+  ghc-options:      -Wall -rtsopts -O3
   default-language: Haskell2010
 
   build-depends:    base > 4.5,
