@@ -41,7 +41,7 @@ import qualified Graphics.UI.GLFW as GLFW
 import Control.Applicative
 import Control.Concurrent.STM
 import Control.Monad.RWS
-import Control.Monad.State
+import Control.Monad.State.Strict
 import Control.Monad.Except
 import Control.Monad.Cont
 import Control.Monad.Identity
