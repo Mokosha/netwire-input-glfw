@@ -1,7 +1,7 @@
 {-|
 Module      : FRP.Netwire.Input.GLFW
 Description : netwire-input instances for use with GLFW
-Copyright   : (c) Pavel Krajcevski, 2017
+Copyright   : (c) Pavel Krajcevski, 2018
 License     : MIT
 Maintainer  : Krajcevski@gmail.com
 Stability   : experimental

@@ -14,7 +14,7 @@ license:             MIT
 license-file:        LICENSE
 author:              Pavel Krajcevski
 maintainer:          Krajcevski@gmail.com
-copyright:           Pavel Krajcevski, 2014-2017
+copyright:           Pavel Krajcevski, 2014-2018
 category:            Game
 build-type:          Simple
 extra-source-files:  examples/Cursor.hs README.md
