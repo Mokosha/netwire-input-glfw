@@ -33,6 +33,7 @@ library
   build-depends:       base >= 4.6 && < 6,
                        netwire-input,
                        containers,
+                       deepseq,
                        GLFW-b,
                        stm,
                        mtl

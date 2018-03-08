@@ -13,6 +13,7 @@ package implements 'GLFWInputT' which has instances of 'MonadKeyboard' and
 'MonadMouse'
 
 -}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE InstanceSigs #-}
@@ -42,12 +43,14 @@ import qualified Data.Set as Set
 import qualified Graphics.UI.GLFW as GLFW
 import Control.Applicative
 import Control.Concurrent.STM
+import Control.DeepSeq
 import Control.Monad.RWS
-import Control.Monad.State.Strict
+import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad.Cont
 import Control.Monad.Identity
 import GHC.Float hiding (clamp)
+import GHC.Generics
 
 import FRP.Netwire.Input
 --------------------------------------------------------------------------------
@@ -84,7 +87,11 @@ data GLFWInputState = GLFWInputState {
   cursorPos :: (Float, Float),
   cmode :: CursorMode,
   scrollAmt :: (Double, Double)
-} deriving(Show)
+} deriving(Show, Generic)
+
+instance NFData GLFW.Key
+instance NFData GLFW.MouseButton
+instance NFData GLFWInputState
 
 instance Key GLFW.Key
 instance MouseButton GLFW.MouseButton
@@ -215,7 +222,6 @@ getInput (IptCtl var _) = readTVarIO var
 
 setInput :: GLFWInputControl -> GLFWInputState -> IO ()
 setInput (IptCtl var win) ipt = do
-
   -- Do we need to change the cursor mode?
   curMode <- GLFW.getCursorInputMode win
   let newMode = modeToGLFWMode (cmode ipt)
@@ -223,7 +229,7 @@ setInput (IptCtl var win) ipt = do
     GLFW.setCursorInputMode win newMode
 
   -- Write the new input
-  atomically $ writeTVar var (ipt { scrollAmt = (0, 0) })
+  atomically $ writeTVar var $!! (ipt { scrollAmt = (0, 0) })
 
 resetCursorPos :: GLFWInputState -> GLFWInputState
 resetCursorPos input = input { cursorPos = (0, 0) }
