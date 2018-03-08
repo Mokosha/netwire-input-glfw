@@ -236,11 +236,13 @@ resetCursorPos input = input { cursorPos = (0, 0) }
 
 resolveReleased :: GLFWInputState -> GLFWInputState
 resolveReleased input = input {
-  keysPressed = Map.map (+1) $
-                foldl (flip Map.delete) (keysPressed input) (Set.elems $ keysReleased input),
+  keysPressed =
+     (+1) <$>
+     foldl (flip Map.delete) (keysPressed input) (Set.elems $ keysReleased input),
   keysReleased = Set.empty,
-  mbPressed = Map.map (+1) $
-              foldl (flip Map.delete) (mbPressed input) (Set.elems $ mbReleased input),
+  mbPressed =
+    (+1) <$>
+    foldl (flip Map.delete) (mbPressed input) (Set.elems $ mbReleased input),
   mbReleased = Set.empty
   }
 
