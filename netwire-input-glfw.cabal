@@ -30,13 +30,13 @@ source-repository head
 
 library
   exposed-modules:     FRP.Netwire.Input.GLFW
-  build-depends:       base >= 4.6 && < 6,
-                       netwire-input,
-                       containers,
-                       deepseq,
-                       GLFW-b,
-                       stm,
-                       mtl
+  build-depends:         base              >= 4.6 && < 6
+                       , netwire-input     >= 0.0.7
+                       , containers
+                       , deepseq
+                       , GLFW-b
+                       , stm
+                       , mtl
   hs-source-dirs:      lib
   default-language:    Haskell2010
 
