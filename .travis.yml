@@ -90,7 +90,7 @@ install:
 - |
   case "$BUILD" in
     stack)
-      stack init --force
+      stack init --force --solver
       stack --no-terminal --install-ghc $ARGS test --only-dependencies
       ;;
     cabal)
@@ -104,7 +104,7 @@ script:
 - |
   case "$BUILD" in
     stack)
-      stack init --force
+      stack init --force --solver
       stack --no-terminal $ARGS test --haddock --no-haddock-deps --flag netwire-input-glfw:examples
       ;;
     cabal)
