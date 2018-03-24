@@ -52,6 +52,21 @@ matrix:
 
   # The Stack builds. We can pass in arbitrary Stack arguments via the ARGS
   # variable, such as using --stack-yaml to point to a different file.
+  - env: BUILD=stack ARGS="--resolver lts-9.21"
+    compiler: ": #stack 8.0.2 osx"
+    os: osx
+
+  - env: BUILD=stack ARGS="--resolver lts-9.21"
+    compiler: ": #stack 8.0.2 linux"
+    addons: {apt: {packages: [cabal-install-head, ghc-head], sources: [hvr-ghc]}}
+
+  - env: BUILD=stack ARGS="--resolver lts-11.1"
+    compiler: ": #stack 8.2.2 osx"
+    os: osx
+
+  - env: BUILD=stack ARGS="--resolver lts-11.1"
+    compiler: ": #stack 8.2.2 linux"
+    addons: {apt: {packages: [cabal-install-head, ghc-head], sources: [hvr-ghc]}}
 
   # Nightly builds are allowed to fail
   - env: BUILD=stack ARGS="--resolver nightly"
@@ -67,6 +82,7 @@ matrix:
   - env: BUILD=cabal GHCVER=7.6.3 CABALVER=1.16
   - env: BUILD=cabal GHCVER=7.8.4 CABALVER=1.18
   - env: BUILD=cabal GHCVER=head  CABALVER=head
+  - env: BUILD=stack ARGS="--resolver nightly"
 
 before_install:
 # Using compiler above sets CC to an invalid value, so unset it
