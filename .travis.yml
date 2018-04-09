@@ -123,7 +123,8 @@ script:
 - |
   case "$BUILD" in
     stack)
-      stack build --no-terminal --test --haddock --no-haddock-deps --flag netwire-input-glfw:examples
+      stack init --force $ARGS --solver
+      stack build --no-terminal --haddock --no-haddock-deps --flag netwire-input-glfw:examples
       ;;
     cabal)
       cabal configure -fexamples --enable-tests --enable-benchmarks -v2 --ghc-options="-O0 -Werror"
