@@ -109,8 +109,8 @@ install:
 - |
   case "$BUILD" in
     stack)
-      stack init --force --solver
-      stack --no-terminal --install-ghc $ARGS test --only-dependencies
+      stack init --force $ARGS --solver
+      stack build --no-terminal --install-ghc --test --only-dependencies
       ;;
     cabal)
       cabal --version
@@ -123,8 +123,7 @@ script:
 - |
   case "$BUILD" in
     stack)
-      stack init --force --solver
-      stack --no-terminal $ARGS test --haddock --no-haddock-deps --flag netwire-input-glfw:examples
+      stack build --no-terminal --test --haddock --no-haddock-deps --flag netwire-input-glfw:examples
       ;;
     cabal)
       cabal configure -fexamples --enable-tests --enable-benchmarks -v2 --ghc-options="-O0 -Werror"
