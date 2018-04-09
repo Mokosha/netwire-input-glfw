@@ -61,7 +61,7 @@ matrix:
 
   - env: BUILD=stack ARGS="--resolver lts-9.21"
     compiler: ": #stack 8.0.2 linux"
-    addons: {apt: {packages: [cabal-install-head, ghc-head], sources: [hvr-ghc]}}
+    addons: {apt: {packages: [cabal-install-1.24, ghc-head], sources: [hvr-ghc]}}
 
   - env: BUILD=stack ARGS="--resolver lts-11.1"
     compiler: ": #stack 8.2.2 osx"
@@ -69,7 +69,7 @@ matrix:
 
   - env: BUILD=stack ARGS="--resolver lts-11.1"
     compiler: ": #stack 8.2.2 linux"
-    addons: {apt: {packages: [cabal-install-head, ghc-head], sources: [hvr-ghc]}}
+    addons: {apt: {packages: [cabal-install-2.0, ghc-head], sources: [hvr-ghc]}}
 
   # Nightly builds are allowed to fail
   - env: BUILD=stack ARGS="--resolver nightly"
