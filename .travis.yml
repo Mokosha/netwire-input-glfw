@@ -127,7 +127,7 @@ script:
       stack build --no-terminal --haddock --no-haddock-deps --flag netwire-input-glfw:examples
       ;;
     cabal)
-      cabal configure -fexamples --enable-tests --enable-benchmarks -v2 --ghc-options="-O0 -Werror"
+      cabal configure -fexamples --enable-tests --enable-benchmarks --ghc-options="-O0 -Werror"
       cabal build
       cabal check || [ "$CABALVER" == "1.16" ]
       cabal test
