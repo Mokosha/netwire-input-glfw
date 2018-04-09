@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                netwire-input-glfw
-version:             0.0.9
+version:             0.0.10
 synopsis:            GLFW instance of netwire-input
 description:         This package contains the necessary glue to allow the use
                      of wires from the netwire-input package. In general, the
@@ -34,7 +34,7 @@ library
                        , netwire-input     >= 0.0.7
                        , containers
                        , deepseq
-                       , GLFW-b
+                       , GLFW-b            >= 1.4.8.2
                        , stm
                        , mtl
   hs-source-dirs:      lib

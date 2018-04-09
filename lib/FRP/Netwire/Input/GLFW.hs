@@ -89,8 +89,6 @@ data GLFWInputState = GLFWInputState {
   scrollAmt :: (Double, Double)
 } deriving(Show, Generic)
 
-instance NFData GLFW.Key
-instance NFData GLFW.MouseButton
 instance NFData GLFWInputState
 
 instance Key GLFW.Key
