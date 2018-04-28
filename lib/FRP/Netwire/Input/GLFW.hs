@@ -34,6 +34,7 @@ module FRP.Netwire.Input.GLFW (
 
   -- * State Types
   GLFWInputControl, GLFWInputState,
+  emptyGLFWState,
   getInput, mkInputControl, pollGLFW
 ) where
 
@@ -176,15 +177,6 @@ instance MonadGLFWInput m => MonadMouse GLFW.MouseButton m where
   scroll :: m (Double, Double)
   scroll = liftM scrollAmt getGLFWInput
 
-kEmptyInput :: GLFWInputState
-kEmptyInput = GLFWInputState { keysPressed = Map.empty,
-                               keysReleased = Set.empty,
-                               mbPressed = Map.empty,
-                               mbReleased = Set.empty,
-                               cursorPos = (0, 0),
-                               cmode = CursorMode'Enabled,
-                               scrollAmt = (0, 0) }
-
 isKeyDown :: GLFW.Key -> GLFWInputState -> Bool
 isKeyDown key = (Map.member key) . keysPressed
 
@@ -307,11 +299,25 @@ cursorPosCallback (IptCtl ctl _) win x y = do
       yf = newRangeC (double2Float y) (0, fromIntegral h) (-1, 1)
   atomically $ modifyTVar' ctl (\ipt -> ipt { cursorPos = (xf, yf)})
 
+-- | Returns the empty GLFW state. In this state, no buttons are pressed, and
+-- the mouse and scroll positions are set to zero. The cursor is also placed in
+-- the disabled state.
+emptyGLFWState :: GLFWInputState
+emptyGLFWState = GLFWInputState
+  { keysPressed = Map.empty
+  , keysReleased = Set.empty
+  , mbPressed = Map.empty
+  , mbReleased = Set.empty
+  , cursorPos = (0, 0)
+  , cmode = CursorMode'Disabled
+  , scrollAmt = (0, 0)
+  }
+
 -- | Creates and returns an 'STM' variable for the window that holds all of the
 -- most recent input state information
 mkInputControl :: GLFW.Window -> IO GLFWInputControl
 mkInputControl win = do
-  ctlvar <- newTVarIO kEmptyInput
+  ctlvar <- newTVarIO (emptyGLFWState { cmode = CursorMode'Enabled })
   let ctl = IptCtl ctlvar win
   GLFW.setScrollCallback win (Just $ scrollCallback ctl)
   GLFW.setKeyCallback win (Just $ keyCallback ctl)
