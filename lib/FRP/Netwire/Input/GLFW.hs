@@ -45,6 +45,8 @@ import qualified Graphics.UI.GLFW as GLFW
 import Control.Applicative
 import Control.Concurrent.STM
 import Control.DeepSeq
+import Control.Monad
+import Control.Monad.Fix
 import Control.Monad.RWS
 import Control.Monad.State
 import Control.Monad.Except
