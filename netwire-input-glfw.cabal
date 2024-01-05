@@ -30,7 +30,7 @@ source-repository head
 
 library
   exposed-modules:     FRP.Netwire.Input.GLFW
-  build-depends:         base              >= 4.6
+  build-depends:         base              >= 4.6 && < 6
                        , netwire-input     >= 0.0.7
                        , containers
                        , deepseq
